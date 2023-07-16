@@ -1,9 +1,13 @@
 from re import M
-from tkinter import *
+from tkinter import * 
+from tkinter import ttk
+from tkinter import filedialog
 from tkinter import messagebox, ttk
 import tkinter as tk
 import datetime as dt
-from tkinter import filedialog
+import sqlite3 as sql
+from PIL import Image, ImageTk
+import io
 tedad_f = 0
 def Login():
     check = user_ent.get()
@@ -20,12 +24,19 @@ def Login():
 def hide(event = None):
     if pass_ent['show'] == '*' :
         pass_ent['show'] = ''
-        eye_img['file'] = 'baz.png'
+        eye_img['file'] = 'img/baz.png'
     elif pass_ent['show'] == '' :
         pass_ent['show'] = '*'
         eye_img['file'] = 'baste.png'
+def change_image() :
+        filename = filedialog.askopenfilename()
+        procuct_img = Image.open(filename)
+        procuct_image = procuct_img.resize((80, 80))
+        product_photo = ImageTk.PhotoImage(procuct_image)
+        photo_label = Label(root3, image=product_photo, width=80, height=80)
+        photo_label.place(x=100, y=38)   
 def getInfo() :
-    pers = pers_ent.get()
+    # pers = pers_ent.get()
     pr = pr_ent.get()
     na = na_ent.get()
     fa = f_ent.get()
@@ -41,22 +52,19 @@ def getInfo() :
     ph = ph_ent.get()
     m = m_ent.get()
     co = combo.get()
+    # photo = self.covert_to_binary_data(filename)
     if pr_ent.get() == '' or pr_ent.get() == '' or na_ent.get() == '' or f_ent.get() == '' or c_ent.get() == '' or nu_ent.get() == '' or d_ent.get() == '' or ch_ent.get() == '' or ph_ent.get() == '' or m_ent.get() == '' :
         messagebox.showerror(title='Error', message='لطفا همه ی فیلد ها را پر کنید')
     else :               
         messagebox.askquestion('askquestion', 'آيا از ذخيره اطلاعات مطمئن هستيد؟')
-        text = '{},{} ,{} ,{},{},{},{} ,{} ,{},{},{},{}\n'.format(pr,na,fa,c,nu,d,v,ch,ph,m,co,img_name)
-        information = open('data.csv', mode = 'a', encoding="utf-8")
-        information.write(text)
-        information.close()
-        pers_ent.focus
-        var3 = IntVar()
-        c1['variable'] = var3
-        var4 = IntVar()
-        c2['variable'] = var4
-        combo.set("یک گزینه را انتخاب کنید")
-        pr_img['file'] = 'img/pr.png'
-        pers_ent.delete(0,END)
+        con = sql.connect('mydb.db')
+        cur=con.cursor()
+        data=(pr,na,fa,c,nu,d,v,ch,ph,m,co)
+        cur.execute('''CREATE TABLE IF NOT EXISTS info (id   ,name TEXT ,father_name TEXT,codemeli TEXT
+        ,shenasname TEXT,date TEXT,situation TEXT,children TEXT,phone TEXT,education TEXT,Contract TEXT)''')
+        cur.execute('INSERT INTO info(id,name,father_name,codemeli,shenasname,date,situation,children,phone,education,Contract) VALUES(?,?,?,?,?,?,?,?,?,?,?)',data)
+        con.commit()
+        # pers_ent.delete(0,END)
         pr_ent.delete(0,END)
         na_ent.delete(0,END)
         f_ent.delete(0,END)
@@ -111,92 +119,45 @@ def sodor() :
 def getcode() :
     global tedad_f
     code_pers = code_ent.get()
-    information = open('data.csv', mode = 'r', encoding="utf-8")
-    info = information.readlines()
-    information.close()
-    for i in range(len(info)) :
-        hoqoq = info[i].split(',')
-        if hoqoq[0] == (code_pers) :
-            root4.state('withdrawn')
-            root5.state('normal')
-            khane['text'] = hoqoq[1]
-            code['text'] = hoqoq[4]
-            date['text'] = hoqoq[5]
-            codePers['text'] = hoqoq[0]
-            name['text'] = hoqoq[1]
-            shomerShenas['text'] = hoqoq[4]
-            tedad['text'] = hoqoq[7]
-            vaziat['text'] = hoqoq[6]
-            tedad_f = hoqoq[7]
-            education['text'] = hoqoq[9]
+    con = sql.connect('mydb.db')
+    cur = con.cursor()
+    row = cur.execute('SELECT * FROM info WHERE id="{}"'.format(code_pers))    
+    row = list(row)
+    codePers["text"] = row[0][0]
+    name["text"] = row[0][1]
+    shomerShenas["text"] = row[0][4]
+    tedad["text"] = row[0][7]
+    vaziat["text"] = row[0][6]
+    
+    code["text"] = row[0][0]
+    date["text"] = row[0][5]
+    education["text"] = row[0][6]
+
+    root4.state('withdrawn')
+    root5.state('normal')
+
+def save_slip() :
+    con = sql.connect('mydb.db')
+    cur=con.cursor()
+    data=(codePers["text"],name["text"],kosorat["text"],daram["text"],kol["text"])
+    cur.execute('''CREATE TABLE IF NOT EXISTS pay_slip (id   ,name TEXT ,kosoorat TEXT,daramad TEXT
+    ,kol TEXT)''')
+    cur.execute('INSERT INTO pay_slip(id,name,kosoorat,daramad,kol) VALUES(?,?,?,?,?)',data)
+    con.commit()
 def List():
-    read = open('data.csv' , mode = 'r' , encoding = 'utf-8')
-    listkarmand = read.readlines()
-    for i in range(len(listkarmand)) :
-        karmand = listkarmand[i].split(',')
-        if i==0:
-            lbl1_n['text']='''{: ^22}'''.format(karmand[1])
-            lbl1_nu['text']='''{: ^22}'''.format(karmand[0])
-            lbl1_c['text']='''{: ^25}'''.format(karmand[4])
-            lbl1_co['text']='''{: ^28}'''.format(karmand[10])
-            lbl1_s['text']='''{: ^28}'''.format(karmand[8])
-        elif i==1:
-            lbl2_n['text']='''{: ^22}'''.format(karmand[1])
-            lbl2_nu['text']='''{: ^22}'''.format(karmand[0])
-            lbl2_c['text']='''{: ^25}'''.format(karmand[4])
-            lbl2_co['text']='''{: ^28}'''.format(karmand[10])
-            lbl2_s['text']='''{: ^28}'''.format(karmand[8])
-        elif i==2:
-            lbl3_n['text']='''{: ^22}'''.format(karmand[1])
-            lbl3_nu['text']='''{: ^22}'''.format(karmand[0])
-            lbl3_c['text']='''{: ^25}'''.format(karmand[4])
-            lbl3_co['text']='''{: ^28}'''.format(karmand[10])
-            lbl3_s['text']='''{: ^28}'''.format(karmand[8])
-        elif i==3:
-            lbl4_n['text']='''{: ^22}'''.format(karmand[1])
-            lbl4_nu['text']='''{: ^22}'''.format(karmand[0])
-            lbl4_c['text']='''{: ^25}'''.format(karmand[4])
-            lbl4_co['text']='''{: ^28}'''.format(karmand[11])
-            lbl4_s['text']='''{: ^28}'''.format(karmand[8])
-        elif i==4:
-            lbl5_n['text']='''{: ^22}'''.format(karmand[1])
-            lbl5_nu['text']='''{: ^22}'''.format(karmand[0])
-            lbl5_c['text']='''{: ^25}'''.format(karmand[4])
-            lbl5_co['text']='''{: ^28}'''.format(karmand[10])
-            lbl5_s['text']='''{: ^28}'''.format(karmand[8])
-        elif i==5:
-            lbl6_n['text']='''{: ^22}'''.format(karmand[1])
-            lbl6_nu['text']='''{: ^22}'''.format(karmand[0])
-            lbl6_c['text']='''{: ^25}'''.format(karmand[4])
-            lbl6_co['text']='''{: ^28}'''.format(karmand[10])
-            lbl6_s['text']='''{: ^28}'''.format(karmand[8])
-        elif i==6:
-            lbl7_n['text']='''{: ^22}'''.format(karmand[1])
-            lbl7_nu['text']='''{: ^22}'''.format(karmand[0])
-            lbl7_c['text']='''{: ^25}'''.format(karmand[4])
-            lbl7_co['text']='''{: ^28}'''.format(karmand[10])
-            lbl7_s['text']='''{: ^28}'''.format(karmand[8])
-        elif i==7:
-            lbl8_n['text']='''{: ^22}'''.format(karmand[1])
-            lbl8_nu['text']='''{: ^22}'''.format(karmand[0])
-            lbl8_c['text']='''{: ^25}'''.format(karmand[4])
-            lbl8_co['text']='''{: ^28}'''.format(karmand[10])
-            lbl8_s['text']='''{: ^28}'''.format(karmand[8])
-        elif i==8:
-            lbl9_n['text']='''{: ^22}'''.format(karmand[1])
-            lbl9_nu['text']='''{: ^22}'''.format(karmand[0])
-            lbl9_c['text']='''{: ^25}'''.format(karmand[4])
-            lbl9_co['text']='''{: ^28}'''.format(karmand[10])
-            lbl9_s['text']='''{: ^28}'''.format(karmand[8])
-        elif i==9:
-            lbl10_n['text']='''{: ^22}'''.format(karmand[1])
-            lbl10_nu['text']='''{: ^22}'''.format(karmand[0])
-            lbl10_c['text']='''{: ^25}'''.format(karmand[4])
-            lbl10_co['text']='''{: ^28}'''.format(karmand[10])
-            lbl10_s['text']='''{: ^28}'''.format(karmand[8])
-        read.close()
-        root6.state('normal')
-        root.state('withdrawn')
+    stocklst = []
+    stock_count=0
+    con=sql.connect('mydb.db')
+    cur=con.cursor()
+    row=cur.execute('SELECT * FROM info')
+    for i in row :
+        stocklst.append(i)
+    for i in stocklst:
+        info.insert(parent='',index='end',iid=stock_count,text='',
+        values=(i[8],i[3],i[5],i[0],i[1],str(stock_count+1)))
+        stock_count += 1
+    root.state('withdrawn')
+    root6.state('normal')
 
 def slip() :
     root4.state('normal')
@@ -208,10 +169,6 @@ def marital_status() :
     pass
 def dropdown_opened() :
     pass
-def change_image() :
-    global img_name
-    img_name = filedialog.askopenfilename()  
-    pr_img['file'] = img_name
 def home_root3() :
         root3.state('withdrawn')
         root.state('normal')
@@ -224,12 +181,16 @@ def home_root5() :
 def home_root7() :
         root7.state('withdrawn')
         root.state('normal')
+def covert_to_binary_data(self,filename):
+    with open (filename , 'rb') as f:
+        blobdata = f.read()
+    return blobdata
 root  = Tk()
-root.state('withdrawn')
-root.geometry('1000x700+400+150')
+root.state('withdrawn') 
+root.geometry('1000x750+400+150')
 
 backg = PhotoImage(file = 'img/back1.png')
-back = Label(width = 1000 , height = 700 , image = backg )
+back = Label(width = 1000 , height = 750 , image = backg )
 back.place(x = 0 , y = 0)
 
 all = LabelFrame(root , bg ='#DEE2E6',relief = 'flat' )
@@ -246,10 +207,10 @@ images.grid(row = 2 , column = 1)
 slip_img = PhotoImage(file = 'img/pay_slip2.png')
 employee_img = PhotoImage(file = 'img/new_employee2.png')
 list_img = PhotoImage(file = 'img/list2.png')
-list = Label(images, image = list_img, bg ='#DEE2E6')
+listt = Label(images, image = list_img, bg ='#DEE2E6')
 pay_slip = Label(images , image = slip_img, bg ='#DEE2E6' )
 new_employee = Label(images , image = employee_img, bg ='#DEE2E6')
-list.grid(row = 1 , column = 1 )
+listt.grid(row = 1 , column = 1 )
 pay_slip.grid(row = 1 , column = 2, padx = 40)
 new_employee.grid(row = 1 , column = 3 )
 
@@ -274,17 +235,19 @@ root3.state('withdrawn')
 
 root3.geometry('1000x750+400+150')
 
-back1_img = PhotoImage(file = 'img/head.png')
+back1_img = PhotoImage(file = 'img/back2.png')
 back1 = Label(root3 , image = back1_img)
-back1.place(x = 28 , y = 30)
+back1.place(x = 0 , y = 0)
 
-back2_img= PhotoImage(file = 'img/body.png')
-back2 = Label(root3 , image = back2_img)
-back2.place(x = 30 , y = 161)
+# back2_img= PhotoImage(file = 'body.png')
+# back2 = Label(root3 , image = back2_img)
+# back2.place(x = 30 , y = 161)
 
 pr_img = PhotoImage(file = 'img/pr.png')
-pr_image = Label(root3 , image = pr_img)
-pr_image.place(x = 100 , y = 38)
+photo_label = Label(root3, image=pr_img, width=80, height=80)
+photo_label.place(x=100, y=38)   
+# pr_image = Label(root3 , image = pr_img)
+# pr_image.place(x = 100 , y = 38)
 
 change_img = PhotoImage(file = 'img/change_img.png')
 change_btn = Button(root3 , image = change_img , bg = '#DEE2E6',activebackground = '#DEE2E6' ,relief = 'flat' , command = change_image)
@@ -297,17 +260,16 @@ root3img = PhotoImage(file = 'img/root3_home.png')
 root3_homee = Button(root3, image = root3img , bg = '#DEE2E6',activebackground = '#DEE2E6' ,relief = 'flat', command = home_root3)
 root3_homee.place(x = 500 , y = 622)
 
-
-pers_ent = Entry(root3, bg = '#E9ECEF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-pr_ent = Entry(root3, bg = '#E9ECEF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-na_ent = Entry(root3, bg = '#E9ECEF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-f_ent = Entry(root3, bg = '#E9ECEF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-c_ent = Entry(root3, bg = '#E9ECEF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-nu_ent = Entry(root3, bg = '#E9ECEF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-d_ent = Entry(root3, bg = '#E9ECEF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-ch_ent = Entry(root3, bg = '#E9ECEF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-ph_ent = Entry(root3, bg = '#E9ECEF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-m_ent = Entry(root3, bg = '#E9ECEF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+# pers_ent = Entry(root3, bg = '#FFFFFF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+pr_ent = Entry(root3, bg = '#FFFFFF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+na_ent = Entry(root3, bg = '#FFFFFF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+f_ent = Entry(root3, bg = '#FFFFFF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+c_ent = Entry(root3, bg = '#FFFFFF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+nu_ent = Entry(root3, bg = '#FFFFFF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+d_ent = Entry(root3, bg = '#FFFFFF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+ch_ent = Entry(root3, bg = '#FFFFFF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+ph_ent = Entry(root3, bg = '#FFFFFF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+m_ent = Entry(root3, bg = '#FFFFFF', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
 var1 = IntVar()
 var2 = IntVar()
 c1 = Checkbutton(root3,bg = '#DEE2E6',variable=var1, onvalue=1, offvalue=0, command=marital_status)
@@ -320,8 +282,8 @@ combo.bind("<<ComboboxSelected>>", dropdown_opened)
 combo.set("یک گزینه را انتخاب کنید")
 combo.place(x=65, y=575)
 #7 #6
-pers_ent.place(x = 633 , y = 68)
-pr_ent.place(x = 635 , y = 67)
+# pers_ent.place(x = 633 , y = 62)
+pr_ent.place(x = 635 , y = 65)
 na_ent.place(x = 635 , y = 219)
 f_ent.place(x = 635 , y = 309)
 c_ent.place(x = 635 , y = 397)
@@ -336,14 +298,13 @@ m_ent.place(x = 71 , y = 489)
 
 root4 = Toplevel()
 root4.state('withdrawn')
-
 root4.geometry('500x300+650+400')
 
 back4_img = PhotoImage(file = 'img/back4.png')
 back4 = Label(root4 ,image = back4_img)
 back4.place(x = 0 , y = 0)
 
-code_ent = Entry(root4, bg = '#E9ECEF', width = 15 , font = ('B Koodak' , 15) , relief = 'flat' , justify = 'right')
+code_ent = Entry(root4, bg = '#FFFFFF', width = 15 , font = ('B Koodak' , 15) , relief = 'flat' , justify = 'right')
 code_ent.place(x = 170, y = 120)
 
 code_img = PhotoImage(file = 'img/code_btn.png')
@@ -358,173 +319,92 @@ code_btn.place(x = 118 , y = 183)
 
 root5 = Toplevel()
 root5.state('withdrawn')
-root5.geometry('800x500+500+250')
+root5.geometry('1000x750+500+250')
 back5_img = PhotoImage(file = 'img/back5.png')
 back5 = Label(root5 ,image = back5_img)
 back5.place(x = 0 , y = 0)
-slip_ent1 = Entry(root5, bg = '#E3F2FD', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-slip_ent2 = Entry(root5, bg = '#E3F2FD', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-slip_ent3 = Entry(root5, bg = '#E3F2FD', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-slip_ent4 = Entry(root5, bg = '#E3F2FD', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
-slip_ent5 = Entry(root5, bg = '#E3F2FD', width = 20 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+slip_ent1 = Entry(root5, bg = '#E3F2FD', width = 30 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+slip_ent2 = Entry(root5, bg = '#E3F2FD', width = 30 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+slip_ent3 = Entry(root5, bg = '#E3F2FD', width = 30 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+slip_ent4 = Entry(root5, bg = '#E3F2FD', width = 30 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
+slip_ent5 = Entry(root5, bg = '#E3F2FD', width = 30 , font = ('B Koodak' , 10) , relief = 'flat' , justify = 'right')
 #+10 #+4
-slip_ent1.place(x = 135 , y = 113)
-slip_ent2.place(x = 135 , y = 158)
-slip_ent3.place(x = 135 , y = 200)
-slip_ent4.place(x = 135 , y = 245)
-slip_ent5.place(x = 135 , y = 287)
+slip_ent1.place(x = 160 , y = 242) 
+slip_ent2.place(x = 160 , y = 287)
+slip_ent3.place(x = 160 , y = 329)
+slip_ent4.place(x = 160 , y = 374)
+slip_ent5.place(x = 160 , y = 416)
 
 slip_btn2_img = PhotoImage(file = 'img/slip_btn2.png')
 slip_btn2 = Button(root5 , image = slip_btn2_img , relief = 'flat' , activebackground = '#DEE2E6',command = sodor)
-slip_btn2.place(x = 132 , y = 333)
+slip_btn2.place(x = 191 , y = 494)
 
 
-khane = Label(root5  , text = ''  , width = 10, font = ('B Koodak' , 15) , bg  = '#42A5F5' , fg = '#CED4DA')
-khane.place(x = 533 , y = 228)
+khane = Label(root5  , text = 'علی کیادربندسری'  , width = 15, font = ('B Koodak' , 20) , bg  = '#42A5F5' , fg = '#CED4DA')
+khane.place(x = 600 , y = 340)
 
-code = Label(root5  , text = ''  , width = 10, font = ('B Koodak' , 10) , bg  = '#42A5F5' , fg = '#CED4DA')
-date = Label(root5  , text = ''  , width = 10, font = ('B Koodak' , 10) , bg  = '#42A5F5' , fg = '#CED4DA')
-education = Label(root5  , text = ''  , width = 10, font = ('B Koodak' , 10) , bg  = '#42A5F5' , fg = '#CED4DA')
+code = Label(root5  , text = ''  , width = 10, font = ('B Koodak' , 14) , bg  = '#42A5F5' , fg = '#CED4DA')
+date = Label(root5  , text = ''  , width = 10, font = ('B Koodak' , 14) , bg  = '#42A5F5' , fg = '#CED4DA')
+education = Label(root5  , text = ''  , width = 10, font = ('B Koodak' , 14) , bg  = '#42A5F5' , fg = '#CED4DA')
 
-code.place(x = 525 , y = 265)
-date.place(x = 525 , y = 292)
-education.place(x = 525 , y = 316)
+code.place(x = 620 , y = 410)
+date.place(x = 620 , y = 442)
+education.place(x = 620 , y = 474)
 
 root5img = PhotoImage(file = 'img/root5_home.png')
 root5_homee = Button(root5, image = root5img , bg = '#FFFFFF',activebackground = '#DEE2E6' ,relief = 'flat', command = home_root5)
-root5_homee.place(x = 276 , y = 333)
+root5_homee.place(x = 356 , y = 494)
 
 
 
 root6 = Toplevel()
 root6.state('withdrawn')
-root6.geometry('1000x666+400+200')
-back3_img = PhotoImage(file = 'img/back3.png')
+root6.geometry('1000x750+400+150')
+back3_img = PhotoImage(file = 'img/back6.png')
 back3 = Label(root6 , image = back3_img)
 back3.place(x = 0 , y = 0)
-lbl1_n = Label(root6 , text = '' , font = ('B Koodak' , 13) , width = 12 )
-lbl2_n = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12 , bg = '#CED4DA')
-lbl3_n = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12)
-lbl4_n = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12 , bg = '#CED4DA')
-lbl5_n = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12)
-lbl6_n = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12 , bg = '#CED4DA')
-lbl7_n = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12)
-lbl8_n = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12 , bg = '#CED4DA')
-lbl9_n = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12)
-lbl10_n = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12 , bg = '#CED4DA')
-lbl1_n.place(x = 664 , y = 142 )
-lbl2_n.place(x = 664 , y = 187 )
-lbl3_n.place(x = 664 , y = 232 )
-lbl4_n.place(x = 664 , y = 277 )
-lbl5_n.place(x = 664 , y = 322 )
-lbl6_n.place(x = 664 , y = 361 )
-lbl7_n.place(x = 664 , y = 412 )
-lbl8_n.place(x = 664 , y = 457 )
-lbl9_n.place(x = 664 , y = 502 )
-lbl10_n.place(x = 664 , y = 547 )
 
-lbl1_nu = Label(root6 , text = '' , font = ('B Koodak' , 13) , width = 10)
-lbl2_nu = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl3_nu = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl4_nu = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl5_nu = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl6_nu = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl7_nu = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl8_nu = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl9_nu = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl10_nu = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl1_nu.place(x = 520 , y = 142 )
-lbl2_nu.place(x = 520 , y = 187 )
-lbl3_nu.place(x = 520 , y = 232 )
-lbl4_nu.place(x = 520 , y = 277 )
-lbl5_nu.place(x = 520 , y = 322 )
-lbl6_nu.place(x = 520 , y = 361 )
-lbl7_nu.place(x = 520 , y = 412 )
-lbl8_nu.place(x = 520 , y = 457 )
-lbl9_nu.place(x = 520 , y = 502 )
-lbl10_nu.place(x = 520 , y = 547 )
-
-lbl1_c = Label(root6 , text = '' , font = ('B Koodak' , 13) , width = 10)
-lbl2_c = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl3_c = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl4_c = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl5_c = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl6_c = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl7_c = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl8_c = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl9_c = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl10_c = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl1_c.place(x = 390 , y = 142 )
-lbl2_c.place(x = 390 , y = 187 )
-lbl3_c.place(x = 390 , y = 232 )
-lbl4_c.place(x = 390 , y = 277 )
-lbl5_c.place(x = 390 , y = 322 )
-lbl6_c.place(x = 390 , y = 361 )
-lbl7_c.place(x = 390 , y = 412 )
-lbl8_c.place(x = 390 , y = 457 )
-lbl9_c.place(x = 390 , y = 502 )
-lbl10_c.place(x = 390 , y = 547 )
-
-lbl1_co = Label(root6 , text = '' , font = ('B Koodak' , 13) , width = 10)
-lbl2_co = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl3_co = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl4_co = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl5_co = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl6_co = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl7_co = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl8_co = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl9_co = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10)
-lbl10_co = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 10 , bg = '#CED4DA')
-lbl1_co.place(x = 274 , y = 142 )
-lbl2_co.place(x = 274 , y = 187 )
-lbl3_co.place(x = 274 , y = 232 )
-lbl4_co.place(x = 274 , y = 277 )
-lbl5_co.place(x = 274 , y = 322 )
-lbl6_co.place(x = 274 , y = 361 )
-lbl7_co.place(x = 274 , y = 412 )
-lbl8_co.place(x = 274 , y = 457 )
-lbl9_co.place(x = 274 , y = 502 )
-lbl10_co.place(x = 274 , y = 547 )
-
-
-lbl1_s = Label(root6 , text = '' , font = ('B Koodak' , 13) , width = 12)
-lbl2_s = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12 , bg = '#CED4DA')
-lbl3_s = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12)
-lbl4_s = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12 , bg = '#CED4DA')
-lbl5_s = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12)
-lbl6_s = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12 , bg = '#CED4DA')
-lbl7_s = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12)
-lbl8_s = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12 , bg = '#CED4DA')
-lbl9_s = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12)
-lbl10_s = Label(root6 , text = '', font = ('B Koodak' , 13) , width = 12 , bg = '#CED4DA')
-lbl1_s.place(x = 138 , y = 142 )
-lbl2_s.place(x = 138 , y = 187 )
-lbl3_s.place(x = 138 , y = 232 )
-lbl4_s.place(x = 138 , y = 277 )
-lbl5_s.place(x = 138 , y = 322 )
-lbl6_s.place(x = 138 , y = 361 )
-lbl7_s.place(x = 138 , y = 412 )
-lbl8_s.place(x = 138 , y = 457 )
-lbl9_s.place(x = 138 , y = 502 )
-lbl10_s.place(x = 138 , y = 547 )
+info = ttk.Treeview(root6,show='headings',height=12)
+info['columns']=('phone','contract','codemeli','code','name','row')
+info.column('#0',width=0,stretch=NO)
+info.column('phone',width=150,anchor=E)
+info.column('contract',width=150,anchor=E)
+info.column('codemeli',width=100,anchor=E)
+info.column('code',width=150,anchor=E)
+info.column('name',width=200,anchor=E)
+info.column('row',width=100,anchor=E)
+info.heading('#0',text='',anchor=E)
+info.heading('phone',text='شماره همراه',anchor=E)
+info.heading('contract',text='نوع قرارداد',anchor=E)
+info.heading('codemeli',text='کد ملی',anchor=E)
+info.heading('code',text='شماره پرسنلی',anchor=E)
+info.heading('name',text='نام و نام خانوادگی',anchor=E)
+info.heading('row',text='ردیف',anchor=E)
+ttk.Style().theme_use('clam')
+ttk.Style().configure("Treeview.Heading",font=('B koodak', 18),padding=[0, 5, 15, 5],background='#495057',foreground="white",bd=0,relief='flat')
+ttk.Style().map("Treeview.Heading",background=[('active','#495057')])
+ttk.Style().configure("Treeview", highlightthickness=0, height=150,bd=0, font=('AraFProgram', 16),background="white",foreground="black",rowheight = 35,fieldbackground="white")
+ttk.Style().map("Treeview",background=[('selected', '#DEE2E6')],foreground=[('selected', 'black')])
+        
+info.place(x = 75 , y = 100)
 
 root6img = PhotoImage(file = 'img/root6_home.png')
 root6_home = Button(root6, image = root6img , bg = '#DEE2E6',activebackground = '#DEE2E6' ,relief = 'flat', command = home_root6)
-root6_home.place(x = 22 , y = 590)
+root6_home.place(x = 22 , y = 640)
 
 
 
 
 root7 = Toplevel()
-root7.geometry('1000x700+400+200')
+root7.geometry('1000x750+400+200')
 root7.state('withdrawn')
 
-back7_img = PhotoImage(file = 'img/back6.png')
+back7_img = PhotoImage(file = 'img/back7.png')
 back7 = Label(root7 ,image = back7_img)
 back7.place(x = 0 , y = 0)
 
 codePers = Label(root7, text = '', font = ('B Koodak' , 10) , width = 10 , bg = '#DEE2E6')
-name = Label(root7, text = 'asdsd', font = ('B Koodak' , 10) , width = 10 , bg = '#DEE2E6')
+name = Label(root7, text = '', font = ('B Koodak' , 10) , width = 10 , bg = '#DEE2E6')
 shomerShenas = Label(root7, text = '', font = ('B Koodak' , 10) , width = 10 , bg = '#DEE2E6')
 tedad = Label(root7, text = '', font = ('B Koodak' , 10) , width = 10 , bg = '#DEE2E6')
 vaziat =Label(root7, text = '', font = ('B Koodak' , 10) , width = 10 , bg = '#DEE2E6')
@@ -568,15 +448,14 @@ kol.place(x = 340 , y = 524)
 
 root7img = PhotoImage(file = 'img/root7_home.png')
 root7_homee = Button(root7, image = root7img , bg = '#FFFFFF',activebackground = '#DEE2E6' ,relief = 'flat', command = home_root7)
-root7_homee.place(x = 310 , y = 603)
+root7_homee.place(x = 534 , y = 631)
 
-chap_img = PhotoImage(file = 'img/chap.png')
-chap = Button(root7, image = chap_img , bg = '#FFFFFF',activebackground = '#DEE2E6' ,relief = 'flat')
-chap.place(x = 518 , y = 603)
+chap_img = PhotoImage(file = 'img/save.png')
+chap = Button(root7, image = chap_img , bg = '#FFFFFF',activebackground = '#DEE2E6' ,relief = 'flat', command = save_slip)
+chap.place(x = 308 , y = 631)
 
 
 root2 = Toplevel()
-# root2.state('withdrawn')
 root2.geometry('600x600+600+200')
 root2.configure(bg = '#e6e6e9')
 eye_img = PhotoImage(file = 'img/baste.png')
